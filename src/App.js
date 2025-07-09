@@ -15,6 +15,11 @@ import AboutUs from './pages/AboutUs';
 function App() {
   const [contract, setContract] = useState(null);
   const { account } = useWeb3React();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
 
   useEffect(() => {
     const initializeContract = async () => {
@@ -40,11 +45,15 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
-        <Navbar contract={contract} />
+         <Navbar 
+          contract={contract} 
+          searchQuery={searchQuery} 
+          onSearch={handleSearch} 
+        />
         
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<Home contract={contract} />} />
+             <Route path="/" element={<Home contract={contract} searchQuery={searchQuery} />} />
             <Route path="/my-campaigns" element={<CreateCampaign contract={contract} />} />
             <Route path="/campaign/:id" element={<CampaignDetails contract={contract} />} />
             <Route path="/about" element={<AboutUs/>} />

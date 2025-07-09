@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react';
 import { useWeb3React } from '@web3-react/core';
 import { contractABI, contractAddress } from '../web3/config';
 import { ethers } from 'ethers';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-export default function Home() {
+export default function Home({ searchQuery }) {
   const { account } = useWeb3React();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const location = useLocation();
 
   const getEthersProvider = () => {
     if (window.ethereum) {
@@ -96,6 +94,16 @@ export default function Home() {
     loadCampaigns();
   }, []);
 
+    const filteredCampaigns = campaigns.filter(campaign => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      campaign.title.toLowerCase().includes(query) ||
+      campaign.description.toLowerCase().includes(query) ||
+      campaign.owner.toLowerCase().includes(query)
+    );
+  });
+
   if (loading) return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="animate-pulse flex flex-col items-center">
@@ -131,10 +139,12 @@ export default function Home() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent">
-              Active Campaigns
+              {searchQuery ? `Search Results for "${searchQuery}"` : 'Active Campaigns'}
             </h1>
             <p className="text-gray-400 mt-2">
-              Support the next generation of Web3 projects
+              {searchQuery 
+                ? `${filteredCampaigns.length} campaign${filteredCampaigns.length !== 1 ? 's' : ''} found`
+                : 'Support the next generation of Web3 projects'}
             </p>
           </div>
           
@@ -161,14 +171,18 @@ export default function Home() {
           </div>
         </div>
 
-        {campaigns.length === 0 ? (
+        {filteredCampaigns.length === 0 ? (
           <div className="bg-gray-800 rounded-xl p-8 text-center">
             <div className="max-w-md mx-auto">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="text-xl font-medium text-gray-300 mb-2">No Active Campaigns</h3>
-              <p className="text-gray-500 mb-6">Be the first to create a campaign and start raising funds!</p>
+              <h3 className="text-xl font-medium text-gray-300 mb-2">
+                {searchQuery ? 'No campaigns match your search' : 'No Active Campaigns'}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {searchQuery ? 'Try a different search term' : 'Be the first to create a campaign and start raising funds!'}
+              </p>
               <Link 
                 to="/my-campaigns"  
                 className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors"
@@ -179,7 +193,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {campaigns.map((campaign, index) => (
+            {filteredCampaigns.map((campaign) => (
               <div 
                 key={campaign.id} 
                 className="bg-gray-800 rounded-xl overflow-hidden hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1"
